@@ -9,10 +9,10 @@ El proyecto fue desarrollado como parte de la materia *Analítica de datos y her
 [cite_start]El objetivo de este proyecto es entrenar un agente que pueda navegar el entorno de Super Mario Bros basándose únicamente en entradas visuales (píxeles), sin conocimiento previo de la lógica interna del juego.
 
 ### Características del Agente
-* [cite_start]**Modelo:** Red Neuronal Convolucional (CNN) con arquitectura Double DQN.
-* [cite_start]**Entrada:** Tensor de $84\times84$ píxeles, escala de grises, stack de 4 frames consecutivos[cite: 33, 58, 60].
-* [cite_start]**Acciones:** Espacio discretizado a 2 acciones: *Avanzar derecha* y *Avanzar derecha + Salto*.
-* [cite_start]**Estabilización:** Uso de Replay Buffer (100,000 transiciones) y Red Target sincronizada periódicamente.
+* **Modelo:** Red Neuronal Convolucional (CNN) con arquitectura Double DQN.
+* **Entrada:** Tensor de $84\times84$ píxeles, escala de grises, stack de 4 frames consecutivos.
+* **Acciones:** Espacio discretizado a 2 acciones: *Avanzar derecha* y *Avanzar derecha + Salto*.
+* **Estabilización:** Uso de Replay Buffer (100,000 transiciones) y Red Target sincronizada periódicamente.
 
 ##  Instalación y Configuración
 
@@ -51,28 +51,28 @@ Estas transformaciones se implementan en el archivo `wrappers.py`.
 ## 2.2 Arquitectura del agente
 
 ### Modelo Double DQN
-El agente utiliza dos redes para mejorar la estabilidad del aprendizaje[cite: 188]:
+El agente utiliza dos redes para mejorar la estabilidad del aprendizaje:
 
-* **Red online:** aprende continuamente y selecciona acciones [cite: 190-192].
-* **Red target:** se mantiene congelada y se sincroniza periódicamente para estabilizar el aprendizaje [cite: 193-196].
+* **Red online:** aprende continuamente y selecciona acciones .
+* **Red target:** se mantiene congelada y se sincroniza periódicamente para estabilizar el aprendizaje .
 
-> Este desacoplamiento reduce la sobreestimación de valores Q[cite: 197].
+> Este desacoplamiento reduce la sobreestimación de valores Q.
 
 ### Red neuronal convolucional
-Implementada en `neural.py`, con la siguiente estructura[cite: 156]:
+Implementada en `neural.py`, con la siguiente estructura:
 
-* **Conv1:** 32 filtros, kernel $8\times8$, stride 4 [cite: 157-160].
-* **Conv2:** 64 filtros, kernel $4\times4$, stride 2 [cite: 165-167].
-* **Conv3:** 64 filtros, kernel $3\times3$, stride 1 [cite: 170-172].
-* **FC:** 512 unidades ReLU [cite: 179-180].
-* **Output:** número de acciones discretas[cite: 183].
+* **Conv1:** 32 filtros, kernel $8\times8$, stride 4 .
+* **Conv2:** 64 filtros, kernel $4\times4$, stride 2 .
+* **Conv3:** 64 filtros, kernel $3\times3$, stride 1 .
+* **FC:** 512 unidades ReLU .
+* **Output:** número de acciones discretas.
 
 ### Replay Buffer
-Contenido en `replay.py`, este componente gestiona la memoria de experiencias [cite: 61-62]:
+Contenido en `replay.py`, este componente gestiona la memoria de experiencias :
 
-* Almacena hasta **100,000 transiciones**[cite: 226].
-* Permite muestreo aleatorio para romper la correlación temporal entre frames consecutivos[cite: 65].
-* Soporta **warmup** (llenado inicial) antes de iniciar el entrenamiento para garantizar diversidad de datos[cite: 67].
+* Almacena hasta **100,000 transiciones**.
+* Permite muestreo aleatorio para romper la correlación temporal entre frames consecutivos.
+* Soporta **warmup** (llenado inicial) antes de iniciar el entrenamiento para garantizar diversidad de datos.
 
 # 3. Entrenamiento
 
