@@ -86,7 +86,7 @@ Incluye las siguientes características:
 * **Sincronización periódica** de la red target para estabilizar el aprendizaje.
 * **Guardado automático de checkpoints** durante el entrenamiento.
 
-## 4. Inferencia y demostración
+# 4. Inferencia y demostración
 
 Para ejecutar un episodio usando un modelo entrenado:
 
@@ -95,7 +95,7 @@ python replay.py
 Este script carga el checkpoint más reciente y ejecuta la política de manera greedy.
 
 
-## 5. Métricas y visualización
+# 5. Métricas y visualización
 
 El sistema registra las siguientes métricas durante el entrenamiento:
 
@@ -106,7 +106,7 @@ El sistema registra las siguientes métricas durante el entrenamiento:
 
 Todas las métricas se guardan automáticamente y pueden ser graficadas utilizando el archivo: metrics.py
 
-## 6. Resultados obtenidos
+# 6. Resultados obtenidos
 
 Basado en el entrenamiento realizado:
 
