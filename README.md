@@ -1,175 +1,120 @@
-Deep Reinforcement Learning for Super Mario Bros using Double DQN
+# Super Mario Bros - Agente Autónomo (Double DQN)
 
-Este repositorio implementa un agente de aprendizaje por refuerzo profundo capaz de jugar de manera autónoma el nivel SuperMarioBros-1-1-v0 utilizando una arquitectura basada en Double Deep Q-Network (Double DQN). El proyecto incluye un pipeline completo de interacción con el entorno, preprocesamiento visual, almacenamiento de experiencias, entrenamiento del agente y generación de métricas de desempeño.
+Este repositorio contiene la implementación de un agente autónomo diseñado para jugar el nivel **SuperMarioBros-1-1** utilizando técnicas de Aprendizaje por Refuerzo Profundo, específicamente **Double Deep Q-Network (Double DQN)**.
 
-La solución se basa en técnicas utilizadas originalmente en Atari DRL research, adaptadas al entorno de Super Mario Bros con un conjunto reducido de acciones para simplificar el problema sin sacrificar complejidad.
+El proyecto fue desarrollado como parte de la materia *Analítica de datos y herramientas de inteligencia artificial II*.
 
-Características principales
+## Descripción
 
-Implementación completa de Double DQN.
+[cite_start]El objetivo de este proyecto es entrenar un agente que pueda navegar el entorno de Super Mario Bros basándose únicamente en entradas visuales (píxeles), sin conocimiento previo de la lógica interna del juego.
 
-Red neuronal convolucional optimizada para procesar imágenes en escala de grises de 84×84.
+### Características del Agente
+* [cite_start]**Modelo:** Red Neuronal Convolucional (CNN) con arquitectura Double DQN.
+* [cite_start]**Entrada:** Tensor de $84\times84$ píxeles, escala de grises, stack de 4 frames consecutivos[cite: 33, 58, 60].
+* [cite_start]**Acciones:** Espacio discretizado a 2 acciones: *Avanzar derecha* y *Avanzar derecha + Salto*.
+* [cite_start]**Estabilización:** Uso de Replay Buffer (100,000 transiciones) y Red Target sincronizada periódicamente.
 
-Replay Buffer para descorrelación de experiencias.
+##  Instalación y Configuración
 
-Frame skipping, redimensionamiento y frame stacking.
+Sigue estos pasos para preparar el ambiente de desarrollo. Es necesario crear un entorno virtual y utilizar versiones específicas de las librerías para garantizar la compatibilidad con `gym-super-mario-bros`.
 
-Registro de métricas clave: recompensa, pérdida, duración de episodios y valor Q promedio.
+### 1. Preparación del Entorno Virtual
 
-Guardado y carga de checkpoints.
-
-Scripts separados para entrenamiento e inferencia.
-
-1. Instalación del entorno
-
-Este proyecto depende de versiones específicas de librerías debido a compatibilidad con gym-super-mario-bros y nes-py. Antes de instalar dependencias, es obligatorio crear un entorno virtual.
-
-Crear entorno virtual compatible
+```bash
 rm -rf mario-env
 python3 -m venv mario-env
 source mario-env/bin/activate
-
-Actualizar herramientas base
 pip install --upgrade pip setuptools wheel
-
-Instalar dependencias numéricas
 pip install numpy==1.23.5 scipy==1.12.0
 pip install torch torchvision
-
-Instalar entorno de Mario
 pip install gym==0.17.2
 pip install pyglet==1.5.0
 pip install nes-py==8.1.1 gym-super-mario-bros==7.3.0
-
-Otras dependencias
 pip install opencv-python pillow tqdm cloudpickle future
 pip install "scikit-image<0.21" imageio networkx
 pip install matplotlib
+```
+# 2. Descripción técnica
 
-2. Estructura del repositorio
-.
-│── agent.py          # Implementación del agente Double DQN
-│── neural.py         # Red neuronal convolucional (CNN)
-│── wrappers.py       # Wrappers de preprocesamiento del entorno
-│── replay.py         # Replay Buffer y carga de checkpoints
-│── metrics.py        # Registro y graficación de métricas
-│── main.py           # Script principal de entrenamiento
-│── README.md         # Documentación
+## 2.1 Pipeline de preprocesamiento
 
-3. Descripción técnica
-3.1 Pipeline de preprocesamiento
+El entorno se transforma mediante una serie de wrappers diseñados para preparar las observaciones antes de enviarlas a la red neuronal. Las transformaciones aplicadas son:
 
-El entorno se transforma mediante wrappers:
+* Conversión a escala de grises.
+* Redimensionamiento a 84×84 píxeles.
+* Salto de frames (*frame skipping*).
+* Normalización de los valores de píxeles.
+* Stacking de 4 frames consecutivos para capturar información temporal.
 
-Conversión a escala de grises.
+Estas transformaciones se implementan en el archivo `wrappers.py`.
 
-Redimensionamiento a 84×84.
+## 2.2 Arquitectura del agente
 
-Salto de frames (frame skipping).
+### Modelo Double DQN
+El agente utiliza dos redes para mejorar la estabilidad del aprendizaje[cite: 188]:
 
-Normalización de valores de píxeles.
+* **Red online:** aprende continuamente y selecciona acciones [cite: 190-192].
+* **Red target:** se mantiene congelada y se sincroniza periódicamente para estabilizar el aprendizaje [cite: 193-196].
 
-Stacking de 4 frames para capturar dinámica temporal.
+> Este desacoplamiento reduce la sobreestimación de valores Q[cite: 197].
 
-Estas transformaciones se implementan en wrappers.py.
+### Red neuronal convolucional
+Implementada en `neural.py`, con la siguiente estructura[cite: 156]:
 
-3.2 Arquitectura del agente
-Modelo Double DQN
+* **Conv1:** 32 filtros, kernel $8\times8$, stride 4 [cite: 157-160].
+* **Conv2:** 64 filtros, kernel $4\times4$, stride 2 [cite: 165-167].
+* **Conv3:** 64 filtros, kernel $3\times3$, stride 1 [cite: 170-172].
+* **FC:** 512 unidades ReLU [cite: 179-180].
+* **Output:** número de acciones discretas[cite: 183].
 
-El agente utiliza dos redes:
+### Replay Buffer
+Contenido en `replay.py`, este componente gestiona la memoria de experiencias [cite: 61-62]:
 
-Red online: aprende continuamente y selecciona acciones.
+* Almacena hasta **100,000 transiciones**[cite: 226].
+* Permite muestreo aleatorio para romper la correlación temporal entre frames consecutivos[cite: 65].
+* Soporta **warmup** (llenado inicial) antes de iniciar el entrenamiento para garantizar diversidad de datos[cite: 67].
 
-Red target: se mantiene congelada y se sincroniza periódicamente para estabilizar el aprendizaje.
+# 3. Entrenamiento
 
-Este desacoplamiento reduce la sobreestimación de valores Q.
-
-Red neuronal convolucional
-
-Implementada en neural.py, con la siguiente estructura:
-
-Conv1: 32 filtros, kernel 8×8, stride 4
-
-Conv2: 64 filtros, kernel 4×4, stride 2
-
-Conv3: 64 filtros, kernel 3×3, stride 1
-
-FC: 512 unidades ReLU
-
-Output: número de acciones discretas
-
-Replay Buffer
-
-Contenido en replay.py:
-
-Almacena hasta 100,000 transiciones.
-
-Permite muestreo aleatorio para romper correlación temporal.
-
-Soporta warmup antes de iniciar entrenamiento.
-
-4. Entrenamiento
-
-El script principal es:
-
-python main.py
+El script principal para entrenar al agente es: main.py
 
 
-Incluye:
+Incluye las siguientes características:
 
-Política epsilon-greedy con decaimiento gradual.
+* Política **epsilon-greedy** con decaimiento gradual.
+* **Warmup** de 10,000 pasos antes de iniciar el entrenamiento.
+* **Sincronización periódica** de la red target para estabilizar el aprendizaje.
+* **Guardado automático de checkpoints** durante el entrenamiento.
 
-Warmup de 10,000 pasos antes de entrenar.
-
-Synchronización periódica de la red target.
-
-Guardado automático de checkpoints.
-
-5. Inferencia y demostración
+## 4. Inferencia y demostración
 
 Para ejecutar un episodio usando un modelo entrenado:
 
 python replay.py
 
-
 Este script carga el checkpoint más reciente y ejecuta la política de manera greedy.
 
-6. Métricas y visualización
 
-El sistema registra:
+## 5. Métricas y visualización
 
-Recompensa acumulada por episodio
+El sistema registra las siguientes métricas durante el entrenamiento:
 
-Longitud del episodio
+* **Recompensa acumulada por episodio**
+* **Longitud del episodio**
+* **Pérdida de entrenamiento**
+* **Valor Q promedio**
 
-Pérdida de entrenamiento
+Todas las métricas se guardan automáticamente y pueden ser graficadas utilizando el archivo: metrics.py
 
-Valor Q promedio
-
-Las métricas se guardan automáticamente y se pueden graficar mediante metrics.py.
-
-7. Resultados obtenidos
+## 6. Resultados obtenidos
 
 Basado en el entrenamiento realizado:
 
-La recompensa promedio muestra una tendencia ascendente estable.
+* La **recompensa promedio** muestra una tendencia ascendente estable.
+* La **duración de los episodios** se mantiene en un rango consistente.
+* La **pérdida** se estabiliza después de un aumento inicial, como es típico en aprendizaje por refuerzo.
+* El **valor Q promedio** converge a un rango estable sin explosiones numéricas.
+* El agente logra avanzar una parte significativa del nivel y exhibe **comportamientos coherentes** como saltos oportunos y navegación efectiva.
 
-La duración de los episodios se mantiene en un rango consistente.
 
-La pérdida se estabiliza después de un aumento inicial, como es típico en RL.
 
-El valor Q promedio converge a un rango estable sin explosiones numéricas.
-
-El agente logra avanzar una parte significativa del nivel y exhibe comportamientos coherentes como saltos oportunos y navegación efectiva.
-
-8. Áreas de mejora
-
-Entrenar durante más tiempo para permitir estrategias más avanzadas.
-
-Explorar arquitecturas alternativas como Dueling DQN o Prioritized Replay.
-
-Extender el espacio de acciones para controlar saltos más complejos.
-
-Implementar un scheduler más sofisticado para epsilon decay.
-
-Probar regularización o técnicas para mejorar estabilidad del valor Q.
